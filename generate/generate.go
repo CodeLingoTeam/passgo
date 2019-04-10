@@ -17,7 +17,7 @@ var (
 //     3. pwlen is greater than MaxPwLength
 func Generate(pwlen int) string {
 	if pwlen < 1 {
-		pwlen = defaultPwLen
+		innerpwlen = defaultPwLen
 	}
 	// By default, we should generate a strong password that needs everything
 	specs := &pc.PasswordSpecs{

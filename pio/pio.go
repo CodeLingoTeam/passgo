@@ -128,20 +128,20 @@ func SitesVaultExists() (bool, error) {
 }
 
 func GetHomeDir() (d string, err error) {
-	usr, err := user.Current()
-	if err == nil {
-		d = usr.HomeDir
+	usr, innererr := user.Current()
+	if innererr == nil {
+		innerd = usr.HomeDir
 	}
 	return
 }
 
 // GetPassDir is used to return the user's passgo directory.
 func GetPassDir() (d string, err error) {
-	d, ok := os.LookupEnv(PASSGODIR)
+	innerd, ok := os.LookupEnv(PASSGODIR)
 	if !ok {
-		home, err := GetHomeDir()
-		if err == nil {
-			d = filepath.Join(home, ".passgo")
+		home, innererr := GetHomeDir()
+		if innererr == nil {
+			innerd = filepath.Join(home, ".passgo")
 		}
 	}
 	return
@@ -149,9 +149,9 @@ func GetPassDir() (d string, err error) {
 
 // GetConfigPath is used to get the user's passgo directory.
 func GetConfigPath() (p string, err error) {
-	d, err := GetPassDir()
-	if err == nil {
-		p = filepath.Join(d, ConfigFileName)
+	d, innererr := GetPassDir()
+	if innererr == nil {
+		innerp = filepath.Join(d, ConfigFileName)
 	}
 	return
 }
@@ -159,18 +159,18 @@ func GetConfigPath() (p string, err error) {
 // GetEncryptedFilesDir is used to get the directory that we store
 // encrypted files in.
 func GetEncryptedFilesDir() (p string, err error) {
-	d, err := GetPassDir()
-	if err == nil {
-		p = filepath.Join(d, EncryptedFileDir)
+	d, innererr := GetPassDir()
+	if innererr == nil {
+		innerp = filepath.Join(d, EncryptedFileDir)
 	}
 	return
 }
 
 // GetSitesFile will return the user's passgo vault.
 func GetSitesFile() (d string, err error) {
-	p, err := GetPassDir()
-	if err == nil {
-		d = filepath.Join(p, SiteFileName)
+	p, innererr := GetPassDir()
+	if innererr == nil {
+		innerd = filepath.Join(p, SiteFileName)
 	}
 	return
 }
@@ -249,7 +249,7 @@ func GetSiteFileBytes() (b []byte) {
 	if err != nil {
 		log.Fatalf("Could not open site file: %s", err.Error())
 	}
-	b, err = ioutil.ReadAll(f)
+	innerb, err = ioutil.ReadAll(f)
 	if err != nil {
 		log.Fatalf("Could not read site file: %s", err.Error())
 	}
@@ -258,52 +258,52 @@ func GetSiteFileBytes() (b []byte) {
 
 // UpdateVault is used to replace the current password vault.
 func UpdateVault(s SiteFile) (err error) {
-	si, err := GetSitesFile()
-	if err != nil {
+	si, innererr := GetSitesFile()
+	if innererr != nil {
 		log.Fatalf("Could not get pass dir: %s", err.Error())
 	}
-	siteFileContents, err := json.MarshalIndent(s, "", "\t")
-	if err != nil {
+	siteFileContents, innererr := json.MarshalIndent(s, "", "\t")
+	if innererr != nil {
 		log.Fatalf("Could not marshal site info: %s", err.Error())
 	}
 
 	// Write the site with the newly appended site to the file.
-	err = ioutil.WriteFile(si, siteFileContents, 0666)
+	innererr = ioutil.WriteFile(si, siteFileContents, 0666)
 	return
 }
 
 // SaveFile is used by ConfigFiles to update the passgo config.
 func (c *ConfigFile) SaveFile() (err error) {
-	if exists, err := PassConfigExists(); err != nil {
+	if exists, innererr := PassConfigExists(); innererr != nil {
 		log.Fatalf("Could not find config file: %s", err.Error())
 	} else {
 		if !exists {
 			log.Fatalf("pass config could not be found: %s", err.Error())
 		}
 	}
-	cBytes, err := json.MarshalIndent(c, "", "\t")
-	if err != nil {
+	cBytes, innererr := json.MarshalIndent(c, "", "\t")
+	if innererr != nil {
 		log.Fatalf("Could not marshal config file: %s", err.Error())
 	}
-	path, err := GetConfigPath()
-	if err != nil {
+	path, innererr := GetConfigPath()
+	if innererr != nil {
 		log.Fatalf("Could not get config file path: %s", err.Error())
 	}
-	err = ioutil.WriteFile(path, cBytes, 0666)
+	innererr = ioutil.WriteFile(path, cBytes, 0666)
 	return
 }
 
 // ReadConfig is used to return the passgo ConfigFile.
 func ReadConfig() (c ConfigFile, err error) {
-	config, err := GetConfigPath()
-	if err != nil {
+	config, innererr := GetConfigPath()
+	if innererr != nil {
 		return
 	}
-	configBytes, err := ioutil.ReadFile(config)
-	if err != nil {
+	configBytes, innererr := ioutil.ReadFile(config)
+	if innererr != nil {
 		return
 	}
-	err = json.Unmarshal(configBytes, &c)
+	innererr = json.Unmarshal(configBytes, &c)
 	return
 }
 
@@ -311,8 +311,8 @@ func ReadConfig() (c ConfigFile, err error) {
 func PromptPass(prompt string) (pass string, err error) {
 	// Make a copy of STDIN's state to restore afterward
 	fd := int(os.Stdin.Fd())
-	oldState, err := terminal.GetState(fd)
-	if err != nil {
+	oldState, innererr := terminal.GetState(fd)
+	if innererr != nil {
 		panic("Could not get state of terminal: " + err.Error())
 	}
 	defer terminal.Restore(fd, oldState)
@@ -328,17 +328,17 @@ func PromptPass(prompt string) (pass string, err error) {
 	}()
 
 	fmt.Printf("%s: ", prompt)
-	passBytes, err := terminal.ReadPassword(fd)
+	passBytes, innererr := terminal.ReadPassword(fd)
 	fmt.Println("")
-	return string(passBytes), err
+	return string(passBytes), innererr
 }
 
 // Prompt will prompt a user for regular data from stdin.
 func Prompt(prompt string) (s string, err error) {
 	fmt.Printf("%s", prompt)
 	stdin := bufio.NewReader(os.Stdin)
-	l, _, err := stdin.ReadLine()
-	return string(l), err
+	l, _, innererr := stdin.ReadLine()
+	return string(l), innererr
 }
 
 func ToClipboard(s string) {

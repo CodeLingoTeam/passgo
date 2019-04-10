@@ -83,7 +83,7 @@ func Seal(key *[32]byte, message []byte) ([]byte, error) {
 // the risk of programmers reusing nonces.
 func SealAsym(message []byte, pub *[32]byte, priv *[32]byte) (out []byte, err error) {
 	var nonce [24]byte
-	if _, err := rand.Read(nonce[:]); err != nil {
+	if _, innererr := rand.Read(nonce[:]); innererr != nil {
 		return nil, err
 	}
 	sealedBytes := box.Seal(out, message, &nonce, pub, priv)
@@ -94,9 +94,9 @@ func SealAsym(message []byte, pub *[32]byte, priv *[32]byte) (out []byte, err er
 func OpenAsym(ciphertext []byte, pub, priv *[32]byte) (out []byte, err error) {
 	var nonce [24]byte
 	copy(nonce[:], ciphertext[:24])
-	out, ok := box.Open(out[:0], ciphertext[24:], &nonce, pub, priv)
+	innerout, ok := box.Open(innerout[:0], ciphertext[24:], &nonce, pub, priv)
 	if !ok {
-		err = errors.New("Unable to decrypt message")
+		innererr = errors.New("Unable to decrypt message")
 	}
 	return
 }
@@ -105,9 +105,9 @@ func OpenAsym(ciphertext []byte, pub, priv *[32]byte) (out []byte, err error) {
 func Open(key *[32]byte, ciphertext []byte) (message []byte, err error) {
 	var nonce [24]byte
 	copy(nonce[:], ciphertext[:24])
-	message, ok := secretbox.Open(message[:0], ciphertext[24:], &nonce, key)
+	innermessage, ok := secretbox.Open(innermessage[:0], ciphertext[24:], &nonce, key)
 	if !ok {
-		err = errors.New("Unable to decrypt message")
+		innererr = errors.New("Unable to decrypt message")
 	}
 	return
 }
@@ -115,7 +115,7 @@ func Open(key *[32]byte, ciphertext []byte) (message []byte, err error) {
 // Scrypt is a wrapper around scrypt.Key that performs the Scrypt
 // algorithm on the input with opinionated defaults.
 func Scrypt(pass, salt []byte) (key [32]byte, err error) {
-	keyBytes, err := scrypt.Key(pass, salt, 262144, 8, 1, 32)
+	keyBytes, innererr := scrypt.Key(pass, salt, 262144, 8, 1, 32)
 	copy(key[:], keyBytes)
 	return
 }
@@ -223,17 +223,17 @@ func GeneratePassword(specs *PasswordSpecs, passlen int) (pass string, err error
 		letters [65535]byte
 	)
 	if !passwordExpectationsPossible(specs, passlen) {
-		err = errors.New("Invalid password specs and length passed in to generate password. Try generating a longer password")
+		innererr = errors.New("Invalid password specs and length passed in to generate password. Try generating a longer password")
 		return
 	}
 	if passlen > MaxPwLength {
-		err = fmt.Errorf("Max password length is %d. Generate a shorter password", MaxPwLength)
+		innererr = fmt.Errorf("Max password length is %d. Generate a shorter password", MaxPwLength)
 		return
 	}
 	for {
-		pass = ""
-		_, err = rand.Read(letters[:])
-		if err != nil {
+		innerpass = ""
+		_, innererr = rand.Read(letters[:])
+		if innererr != nil {
 			return
 		}
 
@@ -241,7 +241,7 @@ func GeneratePassword(specs *PasswordSpecs, passlen int) (pass string, err error
 			// Check to make sure that the letter is inside
 			// the range of printable characters
 			if letter > 32 && letter < 127 {
-				pass += string(letter)
+				innerpass += string(letter)
 			}
 			// If it doesn't meet the specs, but we verified earlier that it is
 			// possible to meet the pw expectations, just try again.

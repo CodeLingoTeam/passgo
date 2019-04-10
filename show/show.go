@@ -163,7 +163,7 @@ func showResults(allSites map[string][]pio.SiteInfo) {
 // will return all sites as a map of group names to pio.SiteInfo types. That way, callers
 // of this function do not need to sort the sites by group themselves.
 func SearchAll(st searchType, searchFor string) (allSites map[string][]pio.SiteInfo, allErrors []error) {
-	allSites = map[string][]pio.SiteInfo{}
+	innerallSites = map[string][]pio.SiteInfo{}
 	siteFile, err := pio.GetSitesFile()
 	if err != nil {
 		log.Fatalf("Could not get site file: %s", err.Error())
